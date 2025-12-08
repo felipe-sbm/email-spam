@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+<div class="email-layout">
+    <div class="email-sidebar-container">
+        <NavMenu />
+    </div>
+
+    <main class="email-main">
+        <div class="email-header">
+            <div class="email-header-content">
+                <h5 class="mb-0">
+                    <i class="bi bi-search"></i>
+                </h5>
+            </div>
+            <a class="email-user-info" href="https://fsbm.otsuki.dev" target="_blank" rel="noopener noreferrer">
+                <span class="me-2">fsbm@otsuki.dev</span>
+                <i class="bi bi-person-circle"></i>
+            </a>
+        </div>
+
+        <article class="email-content">
+            @Body
+        </article>
+    </main>
+</div>

@@ -1,0 +1,10 @@
+﻿@page "/not-found"
+@layout MainLayout
+@inject NavigationManager Navigation
+
+<h3>Página não encontrada | 404</h3>
+<p>Desculpe, o conteúdo que você está procurando não existe.</p>
+
+<button @onclick="@(() => Navigation.NavigateTo("/"))">
+    Voltar para a página inicial
+</button>

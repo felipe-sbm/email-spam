@@ -1,0 +1,94 @@
+@using System.Globalization
+
+<div class="email-card @(IsSpam ? "spam" : "")">
+	<div class="email-header">
+		<div class="email-title-row">
+			<h3 class="email-title">@Title</h3>
+			<div class="email-date">@(Received == DateTime.MinValue ? string.Empty : Received.ToString("g", CultureInfo.CurrentCulture))</div>
+		</div>
+		<div class="email-meta">
+			<span class="email-sender">@Sender</span>
+			@if (!string.IsNullOrEmpty(Recipient)) { <span class="email-recipient">→ @Recipient</span> }
+		</div>
+	</div>
+
+	<div class="email-body">
+		@if (ShowFullBody)
+		{
+			<div class="body-content">@((MarkupString)Body)</div>
+		}
+		else
+		{
+			<div class="body-snippet">@GetSnippet()</div>
+		}
+	</div>
+
+	<div class="email-actions">
+		<button class="btn-link" @onclick="ToggleBody">@(ShowFullBody ? "Mostrar menos" : "Mostrar mais")</button>
+		<button class="btn-link" @onclick="ToggleDetails">@(ShowDetails ? "Esconder info" : "Mais informações")</button>
+	</div>
+
+	@if (ShowDetails)
+	{
+		<div class="email-details">
+			<dl>
+				<dt>Remetente</dt><dd>@Sender</dd>
+				@if (!string.IsNullOrEmpty(Recipient)) { <dt>Destinatário</dt><dd>@Recipient</dd> }
+				<dt>Recebido</dt><dd>@(Received == DateTime.MinValue ? "-" : Received.ToString("g", CultureInfo.CurrentCulture))</dd>
+				@if (SpamScore.HasValue) { <dt>Spam score</dt><dd>@(SpamScore.Value.ToString("P0"))</dd> }
+				@if (!string.IsNullOrEmpty(Headers)) { <dt>Headers</dt><dd><pre class="headers">@Headers</pre></dd> }
+			</dl>
+		</div>
+	}
+</div>
+
+@code {
+		[Parameter]
+		public string Title { get; set; } = string.Empty;
+
+		[Parameter]
+		public string Body { get; set; } = string.Empty;
+
+		[Parameter]
+		public string Sender { get; set; } = string.Empty;
+
+		[Parameter]
+		public string Recipient { get; set; } = string.Empty;
+
+		[Parameter]
+		public DateTime Received { get; set; } = DateTime.MinValue;
+
+		[Parameter]
+		public double? SpamScore { get; set; }
+
+		[Parameter]
+		public string Headers { get; set; } = string.Empty;
+
+		[Parameter]
+		public int SnippetLength { get; set; } = 250;
+
+		[Parameter]
+		public EventCallback<bool> OnToggleDetails { get; set; }
+
+		[Parameter]
+		public bool IsSpam { get; set; } = false;
+
+		bool ShowDetails { get; set; } = false;
+		bool ShowFullBody { get; set; } = false;
+
+		void ToggleDetails()
+		{
+				ShowDetails = !ShowDetails;
+				OnToggleDetails.InvokeAsync(ShowDetails);
+		}
+
+		void ToggleBody() => ShowFullBody = !ShowFullBody;
+
+		string GetSnippet()
+		{
+				if (string.IsNullOrEmpty(Body)) return string.Empty;
+				var plain = Body;
+				if (plain.Length <= SnippetLength) return plain;
+				return plain.Substring(0, SnippetLength) + "…";
+		}
+}

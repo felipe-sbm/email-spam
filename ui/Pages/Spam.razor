@@ -1,0 +1,135 @@
+@page "/spam"
+
+@using System.Globalization
+@using Email_Spam.Services
+@inject EmailService EmailService
+
+<PageTitle>Spam - Email Spam Detector</PageTitle>
+
+<div class="spam-container">
+    <div class="spam-toolbar mb-4">
+        <h5 class="mb-2">Pasta Spam</h5>
+        <button class="btn btn-sm btn-outline-danger" @onclick="ReloadEmails" disabled="@EmailService.IsLoading">
+            <i class="bi bi-arrow-counterclockwise"></i> Atualizar
+        </button>
+        <button class="btn btn-sm btn-outline-danger" disabled="@EmailService.IsLoading">
+            <i class="bi bi-trash"></i> Limpar Tudo
+        </button>
+    </div>
+
+    <div class="spam-list">
+        @if (EmailService.IsLoading)
+        {
+            <div class="d-flex justify-content-center my-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        }
+        else if (spamEmails.Count == 0)
+        {
+            <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                <p>Nenhum email de spam detectado</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var email in spamEmails)
+            {
+                <div class="email-item-wrapper">
+                    <div class="email-item email-spam @(selectedEmail?.Id == email.Id ? "email-expanded" : "")" @onclick="() => SelectEmail(email)">
+                        <div class="email-checkbox">
+                            <input type="checkbox" />
+                        </div>
+                        <div class="email-avatar">
+                            <span>@email.Sender[0].ToString().ToUpper()</span>
+                        </div>
+                        <div class="email-content">
+                            <div class="email-header-row">
+                                <span class="email-sender">@email.Sender</span>
+                                <span class="email-date">@email.Received.ToString("dd/MM")</span>
+                            </div>
+                            <div class="email-subject">@email.Subject</div>
+                            <div class="email-preview">@GetPreview(email.Body)</div>
+                        </div>
+                        <div class="email-badge">
+                            <span class="badge-spam-score">
+                                @((int)(email.SpamScore * 100))%
+                            </span>
+                        </div>
+                        <div class="email-expand-icon">
+                            <i class="bi @(selectedEmail?.Id == email.Id ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                        </div>
+                    </div>
+                    
+                    @if (selectedEmail?.Id == email.Id)
+                    {
+                        var expandedClass = selectedEmail.IsSpam ? "email-expanded-content email-expanded-spam" : "email-expanded-content";
+                        <div class="@expandedClass">
+                            <EmailViewer
+                                Subject="@selectedEmail.Subject"
+                                Body="@selectedEmail.Body"
+                                Sender="@selectedEmail.Sender"
+                                Recipient="me@example.com"
+                                Received="@selectedEmail.Received"
+                                SpamScore="@selectedEmail.SpamScore"
+                                IsSpam="@selectedEmail.IsSpam"
+                                OnClose="@(() => selectedEmail = null)" />
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<EmailMessage> spamEmails = new();
+    private EmailMessage? selectedEmail;
+
+    protected override void OnInitialized()
+    {
+        spamEmails = EmailService.GetSpamEmails();
+        EmailService.OnEmailsChanged += RefreshEmails;
+        EmailService.OnLoadingChanged += StateHasChanged;
+    }
+
+    private void RefreshEmails()
+    {
+        spamEmails = EmailService.GetSpamEmails();
+        StateHasChanged();
+    }
+
+    private void SelectEmail(EmailMessage email)
+    {
+        if (selectedEmail?.Id == email.Id)
+        {
+            selectedEmail = null;
+        }
+        else
+        {
+            selectedEmail = email;
+        }
+    }
+
+    private async Task ReloadEmails()
+    {
+        await EmailService.ReloadAsync();
+        spamEmails = EmailService.GetSpamEmails();
+        StateHasChanged();
+    }
+
+    private string GetPreview(string body)
+    {
+        if (string.IsNullOrEmpty(body)) return "";
+        return body.Length > 60 ? body[..60] + "..." : body;
+    }
+
+    public void Dispose()
+    {
+        EmailService.OnEmailsChanged -= RefreshEmails;
+        EmailService.OnLoadingChanged -= StateHasChanged;
+    }
+}
+

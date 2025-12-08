@@ -1,0 +1,79 @@
+@using System.Globalization
+
+<div class="email-viewer">
+    <div class="email-viewer-header">
+        <button class="email-close-btn" @onclick="OnClose" title="Fechar">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+
+    <div class="email-viewer-content">
+        <div class="email-viewer-subject">
+            <h4>@Subject</h4>
+        </div>
+
+        <div class="email-viewer-meta">
+            <div class="meta-row">
+                <span class="meta-label">De:</span>
+                <span class="meta-value">@Sender</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Recipient))
+            {
+                <div class="meta-row">
+                    <span class="meta-label">Para:</span>
+                    <span class="meta-value">@Recipient</span>
+                </div>
+            }
+            <div class="meta-row">
+                <span class="meta-label">Data:</span>
+                <span class="meta-value">@(Received == DateTime.MinValue ? "-" : Received.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture))</span>
+            </div>
+            @if (SpamScore.HasValue)
+            {
+                <div class="meta-row">
+                    <span class="meta-label">Spam Score:</span>
+                    <span class="meta-value">
+                        @if (IsSpam)
+                        {
+                            <span class="badge badge-danger">@((int)(SpamScore.Value * 100))%</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-success">@((int)(SpamScore.Value * 100))%</span>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+
+        <div class="email-viewer-body">
+            @((MarkupString)Body)
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Subject { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Body { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Sender { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Recipient { get; set; } = string.Empty;
+
+    [Parameter]
+    public DateTime Received { get; set; } = DateTime.MinValue;
+
+    [Parameter]
+    public double? SpamScore { get; set; }
+
+    [Parameter]
+    public bool IsSpam { get; set; } = false;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+}

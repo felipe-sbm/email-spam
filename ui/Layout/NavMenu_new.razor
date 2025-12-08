@@ -1,0 +1,82 @@
+<div class="email-sidebar">
+    <div class="sidebar-header">
+        <h5 class="mb-0">
+            <i class="bi bi-envelope"></i> Correio da Esperança 🙏😭
+        </h5>
+    </div>
+
+    <div class="compose-btn-container mb-3">
+        <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center" @onclick="GoToCompose">
+            <i class="bi bi-pencil-square me-2"></i> Novo Email
+        </button>
+    </div>
+
+    <nav class="sidebar-menu">
+        <NavLink class="nav-link" href="inbox" Match="NavLinkMatch.All">
+            <i class="bi bi-inbox"></i> <span>Caixa de Entrada</span>
+            <span class="badge bg-primary ms-auto">@inboxCount</span>
+        </NavLink>
+
+        <NavLink class="nav-link" href="compose">
+            <i class="bi bi-pencil"></i> <span>Rascunhos</span>
+            <span class="badge bg-secondary ms-auto">0</span>
+        </NavLink>
+
+        <NavLink class="nav-link" href="sent">
+            <i class="bi bi-send"></i> <span>Enviados</span>
+            <span class="badge bg-secondary ms-auto">@sentCount</span>
+        </NavLink>
+
+        <NavLink class="nav-link" href="spam">
+            <i class="bi bi-exclamation-triangle"></i> <span>Spam</span>
+            <span class="badge bg-danger ms-auto">@spamCount</span>
+        </NavLink>
+    </nav>
+
+    <hr class="my-3" />
+
+    <div class="sidebar-info">
+        <h6 class="mb-2">
+            Informações
+        </h6>
+        <p class="small text-muted">
+            Email Spam Detector - Sistema de detecção de emails de spam usando Machine Learning.
+        </p>
+    </div>
+</div>
+
+@code {
+    private int inboxCount = 0;
+    private int sentCount = 0;
+    private int spamCount = 0;
+
+    [Inject]
+    NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    EmailService EmailService { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        UpdateCounts();
+        EmailService.OnEmailsChanged += UpdateCounts;
+    }
+
+    private void UpdateCounts()
+    {
+        inboxCount = EmailService.GetInboxCount();
+        sentCount = EmailService.GetSentEmails().Count;
+        spamCount = EmailService.GetSpamCount();
+        StateHasChanged();
+    }
+
+    private void GoToCompose()
+    {
+        Navigation.NavigateTo("compose");
+    }
+
+    public void Dispose()
+    {
+        EmailService.OnEmailsChanged -= UpdateCounts;
+    }
+}

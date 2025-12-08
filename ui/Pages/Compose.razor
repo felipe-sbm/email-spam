@@ -1,0 +1,155 @@
+@page "/compose"
+
+@using System.Globalization
+@using System.Net.Http.Json
+@using Email_Spam.Services
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject EmailService EmailService
+
+<PageTitle>Novo Email - Email Spam Detector</PageTitle>
+
+<div class="compose-container">
+    <div class="d-flex compose-header">
+        <a class="btn-close" @onclick="CloseCompose" href="/"></a>
+        <h5 class="pl-2 mb-0">Novo Email</h5>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = "")" ></button>
+        </div>
+    }
+
+    <form @onsubmit="SendEmail">
+        <div class="compose-form">
+            <div class="form-group">
+                <label class="form-label">Para:</label>
+                <input type="email" class="form-control" placeholder="destinatario@example.com" @bind="newEmail.Recipient" required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Assunto:</label>
+                <input type="text" class="form-control" placeholder="Assunto do email" @bind="newEmail.Subject" required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mensagem:</label>
+                <textarea class="form-control" rows="8" placeholder="Escreva sua mensagem aqui..." @bind="newEmail.Body" required></textarea>
+            </div>
+
+            <div class="compose-actions">
+                <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Enviando...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-send"></i> <span>Enviar</span>
+                    }
+                </button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="CloseCompose" disabled="@isLoading">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@code {
+    private class NewEmail
+    {
+        public string Recipient { get; set; } = "";
+        public string Subject { get; set; } = "";
+        public string Body { get; set; } = "";
+    }
+
+    private NewEmail newEmail = new();
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    private async Task SendEmail()
+    {
+        if (string.IsNullOrWhiteSpace(newEmail.Recipient) || 
+            string.IsNullOrWhiteSpace(newEmail.Subject) || 
+            string.IsNullOrWhiteSpace(newEmail.Body))
+        {
+            errorMessage = "Por favor, preencha todos os campos";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+            // Chamar a API para classificar o email com timeout de 10 segundos
+            var classifyRequest = new { text = $"{newEmail.Subject} {newEmail.Body}" };
+            
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var response = await Http.PostAsJsonAsync("http://localhost:5001/predict", classifyRequest, cts.Token);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = "Erro ao classificar email. Verifique se a API está rodando (porta 5001).";
+                isLoading = false;
+                return;
+            }
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            using var doc = System.Text.Json.JsonDocument.Parse(jsonString);
+            var root = doc.RootElement;
+            
+            bool isSpam = root.GetProperty("label").GetString() == "spam";
+            double spamScore = root.TryGetProperty("confidence", out var confProp) ? confProp.GetDouble() : 0.0;
+
+            // Criar objeto de email
+            var sentEmail = new EmailMessage
+            {
+                Sender = "me@example.com",
+                Recipient = newEmail.Recipient,
+                Subject = newEmail.Subject,
+                Body = newEmail.Body,
+                IsSpam = isSpam,
+                SpamScore = spamScore,
+                Received = DateTime.Now
+            };
+
+            // Adicionar ao serviço (persistir no backend)
+            await EmailService.CreateEmailAsync(sentEmail);
+
+            // Limpar formulário
+            newEmail = new();
+
+            // Navegar de volta após 500ms para mostrar feedback
+            await Task.Delay(500);
+            Navigation.NavigateTo("/sent");
+        }
+        catch (System.Threading.Tasks.TaskCanceledException)
+        {
+            errorMessage = "Timeout ao conectar com a API. Verifique se o servidor está rodando em http://localhost:5001";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Erro de conexão: {ex.Message}. Verifique se a API está rodando.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao enviar email: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void CloseCompose()
+    {
+        Navigation.NavigateTo("/inbox");
+    }
+}
+
