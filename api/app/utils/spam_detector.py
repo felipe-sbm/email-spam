@@ -98,70 +98,73 @@ class SpamDetector:
         # Normalizar confiança: mapear o valor bruto (distance) para probabilidade [0-1]
         raw_conf = float(confidence)
         prob = 1.0 / (1.0 + math.exp(-raw_conf))
-        normalized_confidence = min(max(prob * 100.0, 0.0), 100.0)
         
-        # Extrair features mais importantes
+        # Obter feature names
         feature_names = self.vectorizer.get_feature_names_out()
-        feature_scores = X_tfidf.toarray()[0]
         
-        # Encontrar os top 5 features mais importantes
-        top_indices = (-feature_scores).argsort()[:5]
-        top_features = []
-        
-        for idx in top_indices:
-            if feature_scores[idx] > 0:
-                top_features.append({
-                    'word': feature_names[idx],
-                    'score': float(feature_scores[idx]),
-                    'is_spam_indicator': self._is_spam_word(feature_names[idx])
+        # Obter coeficientes do modelo (pesos das palavras)
+        # Para kernel linear, coef_ é acessível
+        if self.model.kernel == 'linear':
+            coefs = self.model.coef_.toarray()[0]
+            
+            # Encontrar palavras na mensagem que contribuíram para a decisão
+            # Primeiro, pegar índices não-zero do vetor da mensagem
+            msg_vector = X_tfidf.toarray()[0]
+            word_indices = msg_vector.nonzero()[0]
+            
+            explanation = []
+            for idx in word_indices:
+                word = feature_names[idx]
+                weight = coefs[idx]
+                # TF-IDF score da palavra na mensagem
+                tfidf_score = msg_vector[idx]
+                # Contribuição = peso * tfidf
+                contribution = weight * tfidf_score
+                
+                explanation.append({
+                    'word': word,
+                    'weight': float(weight),
+                    'contribution': float(contribution)
                 })
+            
+            # Ordenar por contribuição (absoluta ou sinalizada dependendo do interesse)
+            # Spam geralmente tem contribuição positiva alta
+            explanation.sort(key=lambda x: x['contribution'], reverse=True)
+            
+            return {
+                'text': text,
+                'label': prediction,
+                'confidence': prob,
+                'explanation': explanation[:10]  # Top 10 palavras influentes
+            }
         
         return {
             'text': text,
             'label': prediction,
-            'raw_confidence': raw_conf,
-            'confidence': float(prob),
-            'normalized_confidence': normalized_confidence,
-            'is_spam': prediction == 'spam',
-            'explanation': self._generate_explanation(prediction, top_features, text),
-            'top_features': top_features,
-            'token_count': len(text.split()),
-            'message_length': len(text),
-            'model_version': '1.0.0'
+            'confidence': prob,
+            'explanation': "Explicação disponível apenas para kernel linear"
         }
-    
-    def _is_spam_word(self, word):
-        """Verifica se uma palavra é comumente associada com spam"""
-        spam_keywords = {
-            'click', 'win', 'free', 'limited', 'offer', 'now', 'money', 'earn',
-            'cash', 'urgent', 'act', 'verify', 'confirm', 'congratulations',
-            'winner', 'prize', 'buy', 'order', 'discount', 'sale'
-        }
-        return word.lower() in spam_keywords
-    
-    def _generate_explanation(self, label, features, text):
-        """Gera explicação em linguagem natural"""
-        if label == 'spam':
-            if features:
-                feature_list = ', '.join([f'"{f["word"]}"' for f in features[:3]])
-                return f"Mensagem classificada como SPAM. Palavras-chave detectadas: {feature_list}. O modelo identificou padrões típicos de mensagens de spam."
-            else:
-                return "Mensagem classificada como SPAM baseado na análise do modelo."
-        else:
-            return "Mensagem classificada como LEGÍTIMA. O texto não apresenta características típicas de spam."
-    
+
     def save_model(self):
-        """Salva o modelo e vetorizador"""
-        pickle.dump(self.model, open(self.model_path, 'wb'))
-        pickle.dump(self.vectorizer, open(self.vectorizer_path, 'wb'))
+        """Salva o modelo e vetorizador em disco"""
+        with open(self.model_path, 'wb') as f:
+            pickle.dump(self.model, f)
+        with open(self.vectorizer_path, 'wb') as f:
+            pickle.dump(self.vectorizer, f)
         print(f"Modelo salvo em {self.model_path} e {self.vectorizer_path}")
-    
+
     def load_model(self):
-        """Carrega o modelo e vetorizador salvos"""
-        self.model = pickle.load(open(self.model_path, 'rb'))
-        self.vectorizer = pickle.load(open(self.vectorizer_path, 'rb'))
-        print("Modelo carregado com sucesso!")
-    
+        """Carrega o modelo e vetorizador do disco"""
+        try:
+            with open(self.model_path, 'rb') as f:
+                self.model = pickle.load(f)
+            with open(self.vectorizer_path, 'rb') as f:
+                self.vectorizer = pickle.load(f)
+        except Exception as e:
+            print(f"Erro ao carregar modelo: {e}")
+            self.model = None
+            self.vectorizer = None
+
     def get_metrics(self):
-        """Retorna as métricas do modelo"""
+        """Retorna as métricas do último treinamento"""
         return self.metrics

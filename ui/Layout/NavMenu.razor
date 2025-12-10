@@ -13,27 +13,25 @@
 
     <nav class="sidebar-menu">
         <NavLink class="nav-link" href="inbox" Match="NavLinkMatch.All">
-            <i class="bi bi-inbox"></i> <span>Caixa de Entrada</span>
             <span class="badge bg-primary ms-auto">@inboxCount</span>
+            <i class="bi bi-inbox"></i> <span>Caixa de Entrada</span>
         </NavLink>
 
         <NavLink class="nav-link" href="compose">
-            <i class="bi bi-pencil"></i> <span>Rascunhos</span>
             <span class="badge bg-secondary ms-auto">0</span>
+            <i class="bi bi-pencil"></i> <span>Rascunhos</span>
         </NavLink>
 
         <NavLink class="nav-link" href="sent">
-            <i class="bi bi-send"></i> <span>Enviados</span>
             <span class="badge bg-secondary ms-auto">@sentCount</span>
+            <i class="bi bi-send"></i> <span>Enviados</span>
         </NavLink>
 
         <NavLink class="nav-link" href="spam">
-            <i class="bi bi-exclamation-triangle"></i> <span>Spam</span>
             <span class="badge bg-danger ms-auto">@spamCount</span>
+            <i class="bi bi-exclamation-triangle"></i> <span>Spam</span>
         </NavLink>
     </nav>
-
-    <hr class="my-3" />
 
     <div class="sidebar-info">
         <h6 class="mb-2">

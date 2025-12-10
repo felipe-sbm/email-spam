@@ -35,7 +35,7 @@
             @foreach (var email in sentEmails)
             {
                 <div class="email-item-wrapper">
-                    <div class="email-item @(selectedEmail?.Id == email.Id ? "email-expanded" : "")" @onclick="() => SelectEmail(email)">
+                    <div class="email-item @(email.IsSpam ? "email-spam" : "") @(selectedEmail?.Id == email.Id ? "email-expanded" : "")" @onclick="() => SelectEmail(email)">
                         <div class="email-checkbox">
                             <input type="checkbox" />
                         </div>

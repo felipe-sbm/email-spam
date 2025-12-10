@@ -91,11 +91,11 @@
             var classifyRequest = new { text = $"{newEmail.Subject} {newEmail.Body}" };
             
             using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var response = await Http.PostAsJsonAsync("http://localhost:5001/predict", classifyRequest, cts.Token);
+            var response = await Http.PostAsJsonAsync("/predict", classifyRequest, cts.Token);
 
             if (!response.IsSuccessStatusCode)
             {
-                errorMessage = "Erro ao classificar email. Verifique se a API está rodando (porta 5001).";
+                errorMessage = "Erro ao classificar email. Verifique se a API está rodando.";
                 isLoading = false;
                 return;
             }
@@ -131,7 +131,7 @@
         }
         catch (System.Threading.Tasks.TaskCanceledException)
         {
-            errorMessage = "Timeout ao conectar com a API. Verifique se o servidor está rodando em http://localhost:5001";
+            errorMessage = "Timeout ao conectar com a API. Verifique se o servidor está rodando.";
         }
         catch (HttpRequestException ex)
         {

@@ -3,7 +3,6 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-
 class EmailRecord(db.Model):
     __tablename__ = 'emails'
     id = db.Column(db.Integer, primary_key=True)

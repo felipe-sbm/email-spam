@@ -8,7 +8,7 @@ Script para testar os endpoints da API localmente.
 import requests
 import json
 
-BASE_URL = "http://localhost:5000"
+BASE_URL = "http://localhost:5001"
 
 def test_health():
     """Testar saúde da API"""

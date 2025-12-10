@@ -1,4 +1,4 @@
-from spam_detector import SpamDetector
+from app.utils.spam_detector import SpamDetector
 import sys
 
 
@@ -41,7 +41,7 @@ def main():
     detector.save_model()
     
     print("\n✓ Modelo treinado e salvo com sucesso!")
-    print("Agora você pode iniciar a API com: python app.py")
+    print("Agora você pode iniciar a API com: python run.py")
 
 
 if __name__ == '__main__':
