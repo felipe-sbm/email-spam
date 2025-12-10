@@ -9,7 +9,7 @@
 <div class="emails-container">
     <div class="emails-toolbar">
         <h5 class="mb-0">Enviados</h5>
-        <button class="btn btn-sm btn-outline-secondary" disabled="@EmailService.IsLoading">
+        <button class="btn btn-sm btn-outline-secondary my-2" disabled="@EmailService.IsLoading">
             <i class="bi bi-trash"></i> Deletar
         </button>
     </div>
@@ -38,9 +38,6 @@
                     <div class="email-item @(email.IsSpam ? "email-spam" : "") @(selectedEmail?.Id == email.Id ? "email-expanded" : "")" @onclick="() => SelectEmail(email)">
                         <div class="email-checkbox">
                             <input type="checkbox" />
-                        </div>
-                        <div class="email-avatar">
-                            <span>@email.Recipient[0].ToString().ToUpper()</span>
                         </div>
                         <div class="email-content">
                             <div class="email-header-row">

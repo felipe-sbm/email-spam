@@ -161,26 +161,6 @@
     accent-color: #0078d4;
 }
 
-.email-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 16px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 120, 212, 0.25);
-}
-
-.email-item.email-spam .email-avatar {
-    background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
-    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.25);
-}
-
 .email-content {
     flex: 1;
     min-width: 0;

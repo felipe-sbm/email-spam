@@ -88,6 +88,11 @@ namespace Email_Spam.Services
             return _emails.OrderByDescending(e => e.Received).ToList();
         }
 
+        public List<EmailMessage> GetInboxEmails()
+        {
+            return _emails.Where(e => !e.IsSpam).OrderByDescending(e => e.Received).ToList();
+        }
+
         public List<EmailMessage> GetSentEmails()
         {
             return _emails.Where(e => e.Sender == "me@example.com").OrderByDescending(e => e.Received).ToList();
@@ -162,7 +167,7 @@ namespace Email_Spam.Services
 
         public int GetInboxCount()
         {
-            return _emails.Count();
+            return _emails.Count(e => !e.IsSpam);
         }
     }
 }

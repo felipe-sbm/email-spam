@@ -148,28 +148,6 @@ a, .btn-link {
     box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
 }
 
-.email-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 15px;
-    margin-right: 12px;
-    flex-shrink: 0;
-    background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
-    box-shadow: 0 2px 8px rgba(0, 120, 212, 0.2);
-}
-
-/* Avatar color for spam emails */
-.email-item.email-spam .email-avatar {
-    background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
-    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
-}
-
 .email-content {
     flex: 1;
     min-width: 0;
